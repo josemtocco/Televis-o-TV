@@ -1,1 +1,99 @@
+name: Atualizar lista M3U
 
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-m3u
+  cancel-in-progress: true
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            python -m playwright install --with-deps chromium
+          else
+            python -m playwright install-deps chromium || true
+          fi
+
+      - name: Gerar M3U
+        run: python gerar_m3u.py
+
+      - name: Diagnóstico
+        if: always()
+        run: |
+          echo "===== MÉTRICAS ====="
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("status.json")
+          if not p.exists():
+              print("status.json ausente")
+              raise SystemExit(0)
+          s = json.loads(p.read_text(encoding="utf-8"))
+          print("success:", s.get("success"))
+          print("version:", s.get("version"))
+          print("generated_at:", s.get("generated_at"))
+          print(json.dumps(s.get("metrics", {}), ensure_ascii=False, indent=2))
+          for c in s.get("categories", []):
+              err = f' | erro: {c["error"]}' if c.get("error") else ""
+              print(f'{c["name"]}: {c.get("links", 0)} links{err}')
+          PY
+          echo "===== M3U ====="
+          if [ -f canais.m3u ]; then
+            echo "Entradas #EXTINF: $(grep -c '^#EXTINF:' canais.m3u || true)"
+            head -n 12 canais.m3u || true
+          else
+            echo "canais.m3u não gerado"
+          fi
+
+      - name: Upload artefatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3u-status
+          path: |
+            canais.m3u
+            status.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Commit e push
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add canais.m3u status.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração para commit."
+          else
+            git commit -m "Atualizar lista M3U ($(date -u +%Y-%m-%dT%H:%MZ))"
+            git push
+          fi
