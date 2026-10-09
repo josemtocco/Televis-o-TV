@@ -1,0 +1,35 @@
+{
+  "base_url": "https://televisao.tv/",
+  "output_m3u": "canais.m3u",
+  "output_status": "status.json",
+  "concurrency": 20,
+  "page_timeout_ms": 25000,
+  "category_timeout_ms": 45000,
+  "player_wait_ms": 2800,
+  "iframe_timeout_ms": 10000,
+  "max_streams_per_channel": 8,
+  "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "locale": "pt-BR",
+  "timezone": "America/Sao_Paulo",
+  "categories": [
+    {"name": "Notícias", "path": "/canais-de-noticias"},
+    {"name": "Entretenimento", "path": "/canais-de-entretenimento"},
+    {"name": "Filmes", "path": "/canais-de-filmes"},
+    {"name": "Música", "path": "/canais-de-musica"},
+    {"name": "Esporte", "path": "/canais-de-esporte"},
+    {"name": "Infantil", "path": "/canais-infantis"},
+    {"name": "Cultura", "path": "/canais-de-cultura"},
+    {"name": "Regionais", "path": "/canais-regionais"},
+    {"name": "Canais católicos", "path": "/canais-catolicos"},
+    {"name": "Evangélica", "path": "/canais-evangelicos"},
+    {"name": "Portugal", "path": "/canais-de-portugal"},
+    {"name": "Moçambique", "path": "/canais-de-mocambique"},
+    {"name": "Angola", "path": "/canais-de-angola"},
+    {"name": "Desenhos Online", "path": "/desenhos-online"}
+  ],
+  "blocked_slugs": [
+    "", "sobre", "adicionar-tv", "contato", "politica-de-privacidade",
+    "termos-de-uso", "dmca", "sitemap", "login", "register", "buscar",
+    "favoritos", "canais", "categoria", "categorias", "api"
+  ]
+}
